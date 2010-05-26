@@ -1,0 +1,19 @@
+
+Configuration
+
+git by default has its own way of indicating what files to track for versioning. This requires perhaps more of an understanding of git than someone looking to use flashbake may want to delve into. flashbake.s plugins, which are what generates the commit message regardless of how it is run, need a configuration file of their own, anyway. It seemed like a good idea to use this for specifying hot files in a project directory in addition to providing that info.
+
+The control file must be right in the project directory and be named ..flashbake.. If it is not found, flashbake will complain clearly about its absence. flashbake will also complain if the project directory is not a git repository. To make a project directory a git repository, you run the .git init. command in that directory. If you view hidden files in a project directory, you should see a ..git. directory and your ..flashbake. file.
+
+You may also create an optional /.flashbake/config file that can specify plugins, options and hot files. "" refers to your home directory, like ./home/joe. on Linux or ./Users/joe. on OS X. If the optional ..flashbake/config. file is present in your home directory, it will get read first, then the project specific version.
+
+As of version 0.23, there are a few gotchas, however, to this optional file in your home directory. Plugin options will use the project file value if they are duplicated both in the optional home directory version and the project directory version. You can put hot files into the optional, home directory file but they will be evaluated against the project directory so probably won.t be very useful if you have more than one project. You still must have a project specific .flashbake file, anyway.
+
+As of version 0.23, you can use globs in hot files. ? will match a single character, * will match any number of characters and [] can be used for ranges or sets of characters. For example, [0-9] will match a single digit, zero through nine inclusive, in a filename.
+
+And this is how it was changed when I changed it!
+
+OK - now it's really changed!
+
+
+cxf
