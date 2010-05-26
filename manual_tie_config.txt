@@ -1,0 +1,108 @@
+
+/** This file implements configuration, control and reading of TIE measurements from
+* the BT TIE engine (see Altera Instruction Set 2C).
+*
+* 
+*
+* The Altera's 16 inputs are:
+* /--------------------------------------------------------\
+* | ID | type     [ ohms ] | source       | notes          |
+* |--------------------------------------------------------|
+* | A  | E1/T1    [75/120] | channel A    |                |
+* | B  | E1/T1    [75/120] | channel B    |                |
+* | C  | freq     [  50  ] | channel C    |                |
+* | D  | TTL 1pps          | channel C    |                |
+* | E  | freq              | IDT PLL A    |                |
+* | F  | freq              | IDT PLL B    |                |
+* | G  | aux TTL  [  50  ] | channel A    |                |
+* | H  | aux TTL  [  50  ] | channel B    |                |
+* | I  | 1 pps             | int ref 2    |                |
+* | J  | freq              | int ref 2    |                |
+* | K  | 1 pps             | int ref 3    |                |
+* | L  | freq              | int ref 3    |                |
+* | M  | 16 kHz            | 16kHz PLL    | sync'd to 1pps |
+* | N  | 1 pps             | int ref 1    |                |
+* | O  | freq              | int ref 1    |                |
+* | P  | freq              | SyncEthernet |                |
+* \--------------------------------------------------------/
+*
+* The 8 outputs are:
+* /-----------------------------------------------------------------\
+* | ID | function           | notes                                 |
+* |-----------------------------------------------------------------|
+* | 1  | measured channel 1 |                                       |
+* | 2  | measured channel 2 |                                       |
+* | R  | reference channel  |                                       |
+* | A  | AUX A              | PLL A input (shared with ext. AUX A)  |
+* | B  | AUX B              | PLL B input (shared with ext. AUX B)  |
+* | P  | 1PPS -> 16KHz PLL  | synchronises 16KHz PLL                |
+* | M  | monitor output     | to external Ref Out BNC               |
+* | T  | Time-Of-Day        | Provides Altera's operating frequency |
+* \-----------------------------------------------------------------/
+*/
+
+
+
+
+Config file syntax:
+
+for each input to configure add:   (INPUT_ID_FROM_TABLE  INTEGER_TO_DIVIDE_FREQUENCY_TO_8KHZ  TRAFFIC_CONFIG_IF_REQUIRED)
+add a full stop
+for each input to be used   add:   OUTPUT_ID_FROM_TABLE  INPUT_ID_FROM_TABLE
+
+TRAFFIC_CONFIG_IF_REQUIRED:  IMPEDANCE_TYPE  SIGNAL_TYPE  CLOCK_TYPE  LEVEL
+IMPEDANCE_TYPE:              U for unbalanced, B for balanced
+SIGNAL_TYPE:                 B for bits, H for hertz
+CLOCK_TYPE:                  1 for T1, 2 for E1
+LEVEL:                       F for full-height, A for 30dB attenuated
+
+
+Example for measured1: E1 A, measured2: T1 B, ref: 10MHz C
+(A256UH2F)(B193BB1F)(C1250).1A2BRC
+
+
+================================================================
+it's pretty much what he's doing already except...(1 moment)...
+[17:43:54] Rob Desbois: All the AD commands he sends go in 
+brackets at the start without the 'AD', e.g:
+   ADA256UB2F => (A256UB2F)
+then a '.' character
+then all the AI commands he sends go at the end without the 'AI', e.g:
+  AI1B => 1B
+
+so this command sequence:
+  ADA256UB2F
+  ADC1250
+  AI1A
+  AIRC
+becomes:
+  (A256UB2F)(C1250).1ARC
+[17:43:56] Rob Desbois: that's it
+================================================================
+
+
+From Tony Flavin email 09/12/2009:
+=================================
+
+echo -e -n "S0\r" > /dev/ttyS4
+echo -e -n "Da2\r" > /dev/ttyS4
+echo -e -n "Db2\r" > /dev/ttyS4
+echo -e -n "DcT\r" > /dev/ttyS4
+echo -e -n "DdD\r" > /dev/ttyS4
+echo -e -n "DpE\r" > /dev/ttyS4
+echo -e -n "Dl2\r" > /dev/ttyS4
+echo -e -n "DkD\r" > /dev/ttyS4
+echo -e -n "E1UH2F\r" > /dev/ttyS4
+echo -e -n "E2UB2F\r" > /dev/ttyS4
+echo -e -n "R4\r" > /dev/ttyS4
+echo -e -n "I1K0\r" > /dev/ttyS4
+echo -e -n "I2D0\r" > /dev/ttyS4
+echo -e -n "IRL1\r" > /dev/ttyS4
+echo -e -n "IMK0\r" > /dev/ttyS4
+echo -e -n "MA8\r" > /dev/ttyS4
+echo -e -n "MB5\r" > /dev/ttyS4
+echo -e -n "TI\r" > /dev/ttyS4
+echo -e -n "S1\r" > /dev/ttyS4
+echo -e -n "UZ\r" > /dev/ttyS4
+
+hexdump -ve '"%07.7_ad|" 1/1 "%02X|" 3/1 "%02X." "|"  3/1 "%02X." "|"  3/1 "%02X." "|" 16/1 "%02X " "\n"' < /dev/ttyS4
